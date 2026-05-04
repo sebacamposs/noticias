@@ -11,11 +11,6 @@ const CAT_SECTION={
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 
 // FILE LOAD
-const dropZone=document.getElementById('drop-zone'),fileInput=document.getElementById('file-input');
-dropZone.addEventListener('dragover',e=>{e.preventDefault();dropZone.classList.add('drag-over')});
-dropZone.addEventListener('dragleave',()=>dropZone.classList.remove('drag-over'));
-dropZone.addEventListener('drop',e=>{e.preventDefault();dropZone.classList.remove('drag-over');if(e.dataTransfer.files[0])loadFile(e.dataTransfer.files[0])});
-fileInput.addEventListener('change',e=>{if(e.target.files[0])loadFile(e.target.files[0])});
 function loadFile(f){const r=new FileReader();r.onload=e=>{try{DATA=JSON.parse(e.target.result);initUI()}catch(err){alert('Error: '+err.message)}};r.readAsText(f,'utf-8')}
 
 // INIT
@@ -377,26 +372,36 @@ function closePanel(){
   document.getElementById('slide-panel').classList.remove('open');
   if(activeEl){activeEl.classList.remove('active');activeEl=null}
 }
-document.getElementById('panel-close').addEventListener('click',closePanel);
-document.getElementById('panel-overlay').addEventListener('click',closePanel);
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closePanel()});
-
-
-// TABS
-document.querySelectorAll('.tab-btn').forEach(btn=>btn.addEventListener('click',()=>{
-  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');activeTab=btn.dataset.tab;
-  document.getElementById('toolbar').classList.toggle('hidden',activeTab!=='eventos'||activeTab==='juegos');
-  document.getElementById('grid-section').classList.toggle('hidden',activeTab!=='eventos');
-  const cov=document.getElementById('coverage-section');
-  const reg=document.getElementById('regional-section');
-  activeTab==='cobertura'?cov.classList.remove('hidden'):cov.classList.add('hidden');
-  activeTab==='regional'?reg.classList.remove('hidden'):reg.classList.add('hidden');
-  const jue=document.getElementById('juegos-section');
-  activeTab==='juegos'?jue.classList.remove('hidden'):jue.classList.add('hidden');
-  if(activeTab==='regional'&&DATA)initRegional();
-  closePanel();
-}));
+document.addEventListener('DOMContentLoaded',()=>{
+  // FILE INPUT
+  const fileInput=document.getElementById('file-input');
+  if(fileInput)fileInput.addEventListener('change',e=>{if(e.target.files[0])loadFile(e.target.files[0])});
+  const dropZone=document.getElementById('drop-section');
+  if(dropZone){
+    dropZone.addEventListener('dragover',e=>{e.preventDefault();dropZone.classList.add('drag-over')});
+    dropZone.addEventListener('dragleave',()=>dropZone.classList.remove('drag-over'));
+    dropZone.addEventListener('drop',e=>{e.preventDefault();dropZone.classList.remove('drag-over');if(e.dataTransfer.files[0])loadFile(e.dataTransfer.files[0])});
+  }
+  // PANEL
+  document.getElementById('panel-close').addEventListener('click',closePanel);
+  document.getElementById('panel-overlay').addEventListener('click',closePanel);
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')closePanel()});
+  // TABS
+  document.querySelectorAll('.tab-btn').forEach(btn=>btn.addEventListener('click',()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');activeTab=btn.dataset.tab;
+    document.getElementById('toolbar').classList.toggle('hidden',activeTab!=='eventos'||activeTab==='juegos');
+    document.getElementById('grid-section').classList.toggle('hidden',activeTab!=='eventos');
+    const cov=document.getElementById('coverage-section');
+    const reg=document.getElementById('regional-section');
+    activeTab==='cobertura'?cov.classList.remove('hidden'):cov.classList.add('hidden');
+    activeTab==='regional'?reg.classList.remove('hidden'):reg.classList.add('hidden');
+    const jue=document.getElementById('juegos-section');
+    activeTab==='juegos'?jue.classList.remove('hidden'):jue.classList.add('hidden');
+    if(activeTab==='regional'&&DATA)initRegional();
+    closePanel();
+  }));
+});
 
 // FILTERS
 function bindFilters(){

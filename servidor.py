@@ -15,7 +15,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
 os.chdir(DIR)
 with socketserver.TCPServer(("", PORT), Handler) as httpd:
-    url = f"http://localhost:{PORT}/monitor_autoload.html"
+    url = f"http://localhost:{PORT}/index.html"
     print(f"✅ Servidor iniciado en {url}")
     print(f"📁 Sirviendo desde: {DIR}")
     print(f"   Presiona Ctrl+C para detener\n")
