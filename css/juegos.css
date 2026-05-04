@@ -1,0 +1,49 @@
+/* ── JUEGOS ── */
+.juegos-layout{
+  max-width:800px;margin:3rem auto;padding:0 2rem;
+  display:flex;gap:3rem;align-items:flex-start;justify-content:center;
+}
+.juego-divider{width:1px;background:var(--rule);align-self:stretch;margin:0 .5rem}
+.juego-col{display:flex;flex-direction:column;align-items:center;gap:.6rem}
+.juego-header{
+  width:100%;display:flex;justify-content:space-between;align-items:baseline;
+  border-bottom:1px solid var(--rule);padding-bottom:.3rem;margin-bottom:.2rem;
+}
+.juego-title{
+  font-family:'Libre Baskerville',serif;font-size:.9rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:.1em;
+}
+.juego-score{
+  font-family:'IBM Plex Mono',monospace;font-size:1rem;font-weight:700;
+  color:var(--accent);letter-spacing:.1em;
+}
+.juego-screen{
+  position:relative;
+  background:#0a0a0a;
+  border:3px solid var(--ink);
+  box-shadow:4px 4px 0 var(--ink);
+  overflow:hidden;
+}
+.juego-overlay{
+  position:absolute;inset:0;
+  background:rgba(10,10,10,.92);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:.6rem;z-index:10;
+}
+.juego-overlay-title{
+  font-family:'Libre Baskerville',serif;font-size:1.3rem;font-weight:700;
+  color:#d4ff00;letter-spacing:.05em;
+}
+.juego-overlay-sub{font-size:.75rem;color:#888;font-family:monospace;letter-spacing:.1em}
+.juego-btn{
+  background:#d4ff00;color:#000;border:none;
+  font-family:monospace;font-size:.85rem;font-weight:700;
+  padding:.4rem 1.2rem;cursor:pointer;letter-spacing:.08em;
+  transition:transform .1s;
+}
+.juego-btn:hover{transform:scale(1.05)}
+.juego-controls-hint{font-size:.65rem;color:#666;font-family:monospace;letter-spacing:.06em}
+.juego-hi{
+  font-family:'IBM Plex Mono',monospace;font-size:.72rem;
+  color:var(--mid);letter-spacing:.06em;
+}

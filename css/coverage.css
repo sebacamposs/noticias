@@ -1,0 +1,14 @@
+/* ── COVERAGE ── */
+.coverage-grid{
+  columns:3;column-gap:0;column-rule:1px solid var(--rule);
+}
+@media(max-width:800px){.coverage-grid{columns:2}}
+.coverage-item{
+  break-inside:avoid;padding:.75rem 1.2rem;
+  border-bottom:1px solid var(--rule);
+}
+.coverage-name{font-weight:700;font-size:.88rem;margin-bottom:.2rem}
+.coverage-bar-wrap{height:2px;background:var(--cream);margin:.3rem 0}
+.coverage-bar{height:100%;background:var(--ink);transition:width .6s}
+.coverage-count{font-size:.72rem;color:var(--mid);font-style:italic}
+.coverage-cats{font-size:.65rem;color:var(--light);margin-top:.2rem}

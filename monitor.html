@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monitor de Medios Chile</title>
+<link href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=IM+Fell+English:ital@0;1&family=Source+Serif+4:opsz,wght@8..60,300;8..60,400;8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/eventos.css">
+<link rel="stylesheet" href="css/panel.css">
+<link rel="stylesheet" href="css/regional.css">
+<link rel="stylesheet" href="css/coverage.css">
+<link rel="stylesheet" href="css/juegos.css">
+</head>
+<body>
+
+<!-- MASTHEAD -->
+<header>
+  <div class="masthead">
+    <div class="masthead-top">
+      <span id="mh-date">—</span>
+      <span>Monitor de Prensa</span>
+      <span id="mh-edition">Edición Digital</span>
+    </div>
+    <div class="masthead-flag">El Cronista</div>
+    <div class="masthead-bottom">
+      <div class="edition-info">
+        <span id="mh-total">—</span>
+        <span id="mh-fuentes">—</span>
+      </div>
+      <span>Chile · Cobertura Nacional y Regional</span>
+    </div>
+  </div>
+</header>
+
+<!-- DROP ZONE -->
+<section class="drop-section" id="drop-section">
+  <div class="drop-zone" id="drop-zone">
+    <input type="file" id="file-input" accept=".json">
+    <div class="drop-label">Arrastre el archivo de edición</div>
+    <div class="drop-sublabel">Monitoreo_Chile_*.json</div>
+  </div>
+</section>
+
+<!-- STATS BAR -->
+<div class="stats-bar hidden" id="stats-bar">
+  <div class="stat-chip"><strong id="stat-eventos">0</strong> eventos</div>
+  <div class="stat-chip"><strong id="stat-titulares">0</strong> titulares</div>
+  <div class="stat-chip"><strong id="stat-fuentes">0</strong> fuentes</div>
+  <div class="stat-chip"><strong id="stat-regiones">0</strong> regiones</div>
+</div>
+
+<!-- TABS -->
+<div class="tabs hidden" id="tabs">
+  <button class="tab-btn active" data-tab="eventos">Edición del Día</button>
+  <button class="tab-btn" data-tab="regional">Regional</button>
+  <button class="tab-btn" data-tab="cobertura">Cobertura por Medio</button>
+  <button class="tab-btn" data-tab="juegos">Juegos</button>
+</div>
+
+<!-- TOOLBAR -->
+<div class="toolbar hidden" id="toolbar">
+  <div class="search-wrap">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" class="search-input" id="search-input" placeholder="Buscar en la edición…">
+  </div>
+  <select class="filter-select" id="filter-cat"><option value="">Todas las secciones</option></select>
+  <select class="filter-select" id="filter-region"><option value="">Todas las regiones</option></select>
+  <button class="btn-clear" id="btn-clear">Limpiar</button>
+  <span class="result-count" id="result-count"></span>
+</div>
+
+<!-- NEWSPAPER SECTION -->
+<div class="newspaper-section hidden" id="grid-section">
+  <div class="section-header">
+    <span></span>
+    <span class="section-title" id="section-title">Noticias del Día</span>
+    <span></span>
+  </div>
+  <div class="news-columns" id="news-columns"></div>
+  <div class="hidden" id="empty-filtered">
+    <div class="empty-state">
+      <h3>Sin resultados</h3>
+      <p>Intente con otros términos o filtros.</p>
+    </div>
+  </div>
+</div>
+
+<!-- REGIONAL -->
+<div class="hidden" id="regional-section">
+  <div class="regional-layout">
+
+    <!-- LEFT: diarios de la región -->
+    <div class="regional-sources-col">
+      <div class="regional-col-header">
+        <span id="reg-sources-label">Medios</span>
+        <span id="reg-sources-count"></span>
+      </div>
+      <div class="regional-sources-list" id="reg-sources-list">
+        <div class="empty-state" style="padding:3rem 1rem">
+          <p>Selecciona una región</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- CENTER: mapa placeholder -->
+    <div class="regional-map-col">
+      <div class="regional-map-placeholder" id="regional-map">
+        <div id="chile-svg-wrap"></div>
+      </div>
+      
+    </div>
+
+    <!-- RIGHT: noticias de la región -->
+    <div class="regional-news-col">
+      <div class="regional-col-header">
+        <span id="reg-news-label">Noticias</span>
+        <span id="reg-news-count"></span>
+      </div>
+      <div class="regional-news-list" id="reg-news-list">
+        <div class="empty-state" style="padding:3rem 1rem">
+          <p>Selecciona una región</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- JUEGOS -->
+<div class="hidden" id="juegos-section">
+  <div class="juegos-layout">
+    <div class="juego-col" id="snake-col">
+      <div class="juego-header">
+        <span class="juego-title">Snake II</span>
+        <span class="juego-score" id="snake-score">000</span>
+      </div>
+      <div class="juego-screen" id="snake-screen">
+        <canvas id="snake-canvas" width="280" height="280"></canvas>
+        <div class="juego-overlay" id="snake-overlay">
+          <div class="juego-overlay-title">Snake II</div>
+          <div class="juego-overlay-sub">Nokia 7110</div>
+          <button class="juego-btn" id="snake-start">▶ Iniciar</button>
+          <div class="juego-controls-hint">← → ↑ ↓  /  WASD</div>
+        </div>
+      </div>
+      <div class="juego-hi" id="snake-hi">HI: 000</div>
+    </div>
+    <div class="juego-divider"></div>
+    <div class="juego-col" id="tetris-col">
+      <div class="juego-header">
+        <span class="juego-title">Tetris</span>
+        <span class="juego-score" id="tetris-score">000000</span>
+      </div>
+      <div class="juego-screen" id="tetris-screen">
+        <canvas id="tetris-canvas" width="200" height="400"></canvas>
+        <canvas id="tetris-next" width="80" height="80" style="position:absolute;top:8px;right:8px;border:1px solid rgba(255,255,255,.2)"></canvas>
+        <div class="juego-overlay" id="tetris-overlay">
+          <div class="juego-overlay-title">Tetris</div>
+          <div class="juego-overlay-sub">Líneas: <span id="tetris-lines-final">0</span></div>
+          <button class="juego-btn" id="tetris-start">▶ Iniciar</button>
+          <div class="juego-controls-hint">← → ↑ rotar  ↓ bajar  Esp caída</div>
+        </div>
+      </div>
+      <div class="juego-hi" id="tetris-hi">NIVEL: 1 · LÍNEAS: 0</div>
+    </div>
+  </div>
+</div>
+
+<!-- COVERAGE -->
+<div class="newspaper-section hidden" id="coverage-section">
+  <div class="section-header">
+    <span></span><span class="section-title">Índice de Medios</span><span></span>
+  </div>
+  <div class="coverage-grid" id="coverage-grid"></div>
+</div>
+
+<!-- PANEL OVERLAY -->
+<div class="panel-overlay" id="panel-overlay"></div>
+
+<!-- SLIDE PANEL -->
+<div class="slide-panel" id="slide-panel">
+  <div class="panel-flag-bar">
+    <div>
+      <div class="panel-flag-title">El Cronista</div>
+      <div class="panel-kicker" id="panel-kicker">—</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:1rem">
+      <span class="panel-kicker" id="panel-stats-bar">—</span>
+      <button class="panel-close" id="panel-close">Cerrar ✕</button>
+    </div>
+  </div>
+  <div class="panel-3col">
+    <div class="panel-side" id="panel-left">
+      <div class="panel-side-label" id="panel-left-label">Titulares</div>
+    </div>
+    <div class="panel-center" id="panel-center">
+      <div class="panel-img-wrap hidden" id="panel-img-wrap">
+        <img id="panel-img" src="" alt="">
+      </div>
+      <div class="panel-center-body">
+        <div class="panel-title" id="panel-title"></div>
+        <div class="panel-stats-center" id="panel-stats-center"></div>
+        <div class="panel-regiones" id="panel-regiones"></div>
+      </div>
+    </div>
+    <div class="panel-side" id="panel-right">
+      <div class="panel-side-label" id="panel-right-label">Titulares</div>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- MAP TOOLTIP -->
+<div id="map-tooltip">
+  <div class="tt-name" id="tt-name"></div>
+  <div class="tt-row" id="tt-diarios"></div>
+  <div class="tt-row" id="tt-eventos"></div>
+</div>
+
+<!-- SOURCE MODAL -->
+<div class="source-modal-overlay" id="source-modal-overlay">
+  <div class="source-modal" id="source-modal">
+    <div class="source-modal-header">
+      <div>
+        <div class="source-modal-title" id="smo-title"></div>
+        <div class="source-modal-sub" id="smo-sub"></div>
+      </div>
+      <button class="source-modal-close" id="smo-close">Cerrar ✕</button>
+    </div>
+    <div class="source-modal-body" id="smo-body"></div>
+  </div>
+</div>
+
+<script src="js/main.js"></script>
+<script src="js/coverage.js"></script>
+<script src="js/regional.js"></script>
+<script src="js/juegos.js"></script>
+</body>
+</html>
