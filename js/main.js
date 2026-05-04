@@ -340,28 +340,37 @@ function openPanel(ev,cardEl){
   document.getElementById('panel-regiones').innerHTML=(ev.regiones||[]).map(r=>`<span class="panel-region-chip">${esc(r)}</span>`).join('');
 
   const tits=ev.titulares||[];
-  // Agrupar TODOS los titulares juntos para detectar duplicados entre fuentes
   const todosGrupos=agruparPorFuente(tits);
-  const mid=Math.ceil(todosGrupos.length/2);
-  const lg=todosGrupos.slice(0,mid),rg=todosGrupos.slice(mid);
+  const isMobile=window.innerWidth<=600;
+  const mobileEl=document.getElementById('panel-mobile-headlines');
+  const leftEl=document.getElementById('panel-left');
+  const rightEl=document.getElementById('panel-right');
 
-  const leftEl=document.getElementById('panel-left'),rightEl=document.getElementById('panel-right');
-  document.getElementById('panel-left-label').textContent=`${lg.length} fuente${lg.length!==1?'s':''}`;
-  leftEl.innerHTML=document.getElementById('panel-left-label').outerHTML+renderGrupos(lg);
-  if(rg.length){
-    document.getElementById('panel-right-label').textContent=`${rg.length} fuente${rg.length!==1?'s':''}`;
-    rightEl.innerHTML=document.getElementById('panel-right-label').outerHTML+renderGrupos(rg);
-    rightEl.style.display='';
+  if(isMobile){
+    // En móvil: todos los titulares en columna central, columnas laterales ocultas por CSS
+    mobileEl.innerHTML=`<div class="panel-side-label">${todosGrupos.length} fuente${todosGrupos.length!==1?'s':''}</div>`+renderGrupos(todosGrupos);
+    mobileEl.classList.remove('hidden');
+    leftEl.innerHTML='';rightEl.innerHTML='';rightEl.style.display='none';
+    document.getElementById('panel-center').scrollTop=0;
+    initCarousels(mobileEl,todosGrupos);
   } else {
-    rightEl.style.display='none';
+    mobileEl.classList.add('hidden');mobileEl.innerHTML='';
+    const mid=Math.ceil(todosGrupos.length/2);
+    const lg=todosGrupos.slice(0,mid),rg=todosGrupos.slice(mid);
+    document.getElementById('panel-left-label').textContent=`${lg.length} fuente${lg.length!==1?'s':''}`;
+    leftEl.innerHTML=document.getElementById('panel-left-label').outerHTML+renderGrupos(lg);
+    if(rg.length){
+      document.getElementById('panel-right-label').textContent=`${rg.length} fuente${rg.length!==1?'s':''}`;
+      rightEl.innerHTML=document.getElementById('panel-right-label').outerHTML+renderGrupos(rg);
+      rightEl.style.display='';
+    } else {
+      rightEl.style.display='none';
+    }
+    leftEl.scrollTop=0;rightEl.scrollTop=0;
+    document.getElementById('panel-center').scrollTop=0;
+    initCarousels(leftEl,lg);
+    initCarousels(rightEl,rg);
   }
-  leftEl.scrollTop=0;rightEl.scrollTop=0;
-  document.getElementById('panel-center').scrollTop=0;
-
-  // Init carousels — pass the already-computed grupos so UIDs match DOM
-  const freshLeft=initCarousels(leftEl,lg);
-  const freshRight=initCarousels(rightEl,rg);
-  // Lock stage heights after render tick (using fresh DOM refs)
   requestAnimationFrame(()=>lockStageHeights());
 
   document.getElementById('panel-overlay').classList.add('open');

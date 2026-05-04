@@ -246,3 +246,24 @@ a.psg-chip:hover{opacity:.8;}
 ::-webkit-scrollbar-thumb{background:var(--mid)}
 
 .hidden{display:none!important}
+/* ── RESPONSIVE MÓVIL (≤600px) ── */
+@media(max-width:600px){
+  .panel-3col{grid-template-columns:1fr;overflow-y:auto}
+  .panel-side{display:none}
+  .panel-center{border:none;overflow-y:visible}
+  .panel-img-wrap{max-height:40vw}
+  .panel-center-body{padding:1rem .9rem 1.5rem}
+  .panel-title{font-size:clamp(1rem,5vw,1.4rem)}
+  .panel-close{padding:.4rem 1rem;font-size:.85rem;min-height:36px}
+  .panel-flag-bar{padding:.4rem .9rem}
+  .panel-flag-title{font-size:1.1rem}
+  .panel-flag-bar .panel-kicker{display:none}
+  .panel-mobile-headlines{margin-top:1rem;border-top:1px solid var(--rule)}
+  .psg-stage{min-height:0!important;transition:none}
+  .psg-carousel{margin-bottom:.25rem}
+}
+
+/* ── RESPONSIVE TABLET (601–900px) ── */
+@media(min-width:601px) and (max-width:900px){
+  .panel-3col{grid-template-columns:1fr 260px 1fr}
+}
