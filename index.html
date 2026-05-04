@@ -657,6 +657,10 @@ select.filter-select:focus{border-color:var(--accent)}
    ═══════════════════════════════════════════════ */
 @media(max-width:600px){
 
+  /* -- CARRUSEL: altura libre en móvil -- */
+  .psg-stage{min-height:0!important;transition:none}
+  .psg-carousel{margin-bottom:.25rem}
+
   /* -- MASTHEAD -- */
   .masthead{padding:.6rem 1rem .4rem}
   .masthead-top{font-size:.6rem;letter-spacing:.04em}
@@ -1262,16 +1266,19 @@ const renderHeadlines=items=>{
 const _mkLink=(t)=>t.link?`<a href="${esc(t.link)}" target="_blank" rel="noopener">${esc(t.texto)}</a>`:esc(t.texto);
 
 function lockStageHeights(){
+  const mobile=window.innerWidth<=600;
   document.querySelectorAll('.psg-stage').forEach(stage=>{
-    // Measure all hidden ghost spans to find tallest
     const ghosts=stage.querySelectorAll('span.psg-text');
+    if(mobile){
+      ghosts.forEach(g=>g.remove());
+      stage.style.minHeight='';
+      return;
+    }
     let maxH=0;
     ghosts.forEach(g=>{maxH=Math.max(maxH,g.offsetHeight)});
-    // Also measure the visible text
     const vis=stage.querySelector('div.psg-text');
     if(vis)maxH=Math.max(maxH,vis.offsetHeight);
     if(maxH>0)stage.style.minHeight=maxH+'px';
-    // Remove ghost spans after measuring
     ghosts.forEach(g=>g.remove());
   });
 }
