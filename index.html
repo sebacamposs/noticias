@@ -733,6 +733,8 @@ select.filter-select:focus{border-color:var(--accent)}
   .juego-divider{width:100%;height:1px;margin:.5rem 0}
   .juego-col{width:100%}
 
+.panel-mobile-headlines{margin-top:1rem;border-top:1px solid var(--rule)}
+
   /* ── SOURCE MODAL ── */
   .source-modal{
     width:100vw;max-height:80vh;
@@ -1070,6 +1072,7 @@ select.filter-select:focus{border-color:var(--accent)}
         <div class="panel-title" id="panel-title"></div>
         <div class="panel-stats-center" id="panel-stats-center"></div>
         <div class="panel-regiones" id="panel-regiones"></div>
+        <div class="panel-mobile-headlines hidden" id="panel-mobile-headlines"></div>
       </div>
     </div>
     <div class="panel-side" id="panel-right">
@@ -1438,26 +1441,38 @@ function openPanel(ev,cardEl){
   document.getElementById('panel-regiones').innerHTML=(ev.regiones||[]).map(r=>`<span class="panel-region-chip">${esc(r)}</span>`).join('');
 
   const tits=ev.titulares||[];
-  const mid=Math.ceil(tits.length/2);
-  const leftT=tits.slice(0,mid),rightT=tits.slice(mid);
-  const lg=agruparPorFuente(leftT),rg=agruparPorFuente(rightT);
-
+  const isMobile=window.innerWidth<=600;
+  const mobileEl=document.getElementById('panel-mobile-headlines');
   const leftEl=document.getElementById('panel-left'),rightEl=document.getElementById('panel-right');
-  document.getElementById('panel-left-label').textContent=`${lg.length} fuente${lg.length!==1?'s':''}`;
-  leftEl.innerHTML=document.getElementById('panel-left-label').outerHTML+renderHeadlines(leftT);
-  if(rightT.length){
-    document.getElementById('panel-right-label').textContent=`${rg.length} fuente${rg.length!==1?'s':''}`;
-    rightEl.innerHTML=document.getElementById('panel-right-label').outerHTML+renderHeadlines(rightT);
-    rightEl.style.display='';
-  } else {
-    rightEl.style.display='none';
-  }
-  leftEl.scrollTop=0;rightEl.scrollTop=0;
-  document.getElementById('panel-center').scrollTop=0;
 
-  // Init carousels — pass the already-computed grupos so UIDs match DOM
-  initCarousels(leftEl,lg);
-  initCarousels(rightEl,rg);
+  if(isMobile){
+    // En móvil: todos los titulares en el contenedor central
+    const g=agruparPorFuente(tits);
+    mobileEl.innerHTML=`<div class="panel-side-label">${g.length} fuente${g.length!==1?'s':''}</div>`+renderHeadlines(tits);
+    mobileEl.classList.remove('hidden');
+    leftEl.innerHTML='';rightEl.innerHTML='';rightEl.style.display='none';
+    document.getElementById('panel-center').scrollTop=0;
+    initCarousels(mobileEl,g);
+  } else {
+    // Escritorio: columnas izquierda/derecha normales
+    mobileEl.classList.add('hidden');mobileEl.innerHTML='';
+    const mid=Math.ceil(tits.length/2);
+    const leftT=tits.slice(0,mid),rightT=tits.slice(mid);
+    const lg=agruparPorFuente(leftT),rg=agruparPorFuente(rightT);
+    document.getElementById('panel-left-label').textContent=`${lg.length} fuente${lg.length!==1?'s':''}`;
+    leftEl.innerHTML=document.getElementById('panel-left-label').outerHTML+renderHeadlines(leftT);
+    if(rightT.length){
+      document.getElementById('panel-right-label').textContent=`${rg.length} fuente${rg.length!==1?'s':''}`;
+      rightEl.innerHTML=document.getElementById('panel-right-label').outerHTML+renderHeadlines(rightT);
+      rightEl.style.display='';
+    } else {
+      rightEl.style.display='none';
+    }
+    leftEl.scrollTop=0;rightEl.scrollTop=0;
+    document.getElementById('panel-center').scrollTop=0;
+    initCarousels(leftEl,lg);
+    initCarousels(rightEl,rg);
+  }
   // Lock stage heights to tallest item after a brief render tick
   requestAnimationFrame(()=>lockStageHeights());
 
