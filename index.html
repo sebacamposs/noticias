@@ -1109,18 +1109,14 @@ function showLoadError(msg){
 
 async function autoLoad(){
   try{
-    // Request directory listing and find the latest Monitoreo_Chile_*.json
-    const resp=await fetch('./');
-    if(!resp.ok)throw new Error('listing '+resp.status);
-    const html=await resp.text();
-    // Extract all hrefs from directory listing
-    const matches=[...html.matchAll(/href="([^"?#]+)"/gi)]
-      .map(m=>m[1])
-      .filter(h=>h&&/^Monitoreo_Chile_.*\.json$/i.test(decodeURIComponent(h)));
-    if(!matches.length)throw new Error('28');
-    matches.sort().reverse();
-    const fileResp=await fetch(matches[0]);
-    if(!fileResp.ok)throw new Error('28');
+    // Leer puntero latest.json generado por el script Python
+    const ptr=await fetch('latest.json?_='+Date.now());
+    if(!ptr.ok)throw new Error('latest.json no encontrado ('+ptr.status+')');
+    const {file}=await ptr.json();
+    if(!file)throw new Error('latest.json sin campo "file"');
+    document.getElementById('load-sublabel').textContent='Cargando '+file+'…';
+    const fileResp=await fetch(file+'?_='+Date.now());
+    if(!fileResp.ok)throw new Error('JSON '+fileResp.status);
     DATA=await fileResp.json();
     initUI();
   }catch(e){
