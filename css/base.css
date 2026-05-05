@@ -10,21 +10,48 @@
   --max-w:   1320px;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{background:var(--paper);overflow-x:hidden;max-width:100vw}
+html{background:var(--paper)}
 body{
   font-family:'Source Serif 4',Georgia,serif;
   background:var(--paper);color:var(--ink);
   font-size:15px;line-height:1.6;
   min-height:100vh;
-  overflow-x:hidden;
-  max-width:100vw;
 }
+
+/* ── RESPONSIVE STATS BAR ── */
+@media(max-width:600px){
+  .stats-bar{flex-wrap:nowrap;overflow-x:auto;padding:.3rem .75rem;gap:0;-webkit-overflow-scrolling:touch}
+  .stat-chip{padding:.2rem .55rem;font-size:.58rem;white-space:nowrap;flex-shrink:0}
+  .stat-chip strong{font-size:.72rem;margin-right:.2rem}
+  /* Ocultar titulares/medios del encabezado — ya están en el listón negro */
+  .masthead-bottom{display:none}
+}
+
 
 /* ── GRAIN OVERLAY ── */
 body::before{
   content:'';pointer-events:none;
   position:fixed;inset:0;z-index:9999;opacity:.025;
   background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ── STICKY HEADER ── */
+/* Escritorio: scroll normal */
+header{position:static}
+.stats-bar{position:static}
+
+/* Móvil: wrapper sticky — funciona en iOS Safari sin glitches */
+.sticky-top{position:static}
+@media(max-width:600px){
+  .sticky-top{
+    position:sticky;top:0;
+    z-index:50;
+    background:var(--paper);
+    width:100%;
+    overflow:hidden;
+  }
+  header{position:static}
+  .stats-bar{position:static}
 }
 
 /* ── MASTHEAD ── */
@@ -54,6 +81,7 @@ body::before{
   font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--mid);
 }
 .masthead-bottom span{font-family:'Source Serif 4',serif}
+.masthead-bottom{display:none}
 .edition-info{display:flex;gap:2rem}
 
 /* ── DROP ZONE ── */
@@ -134,3 +162,20 @@ select.filter-select:focus{border-color:var(--accent)}
 }
 .tab-btn:hover{color:var(--ink)}
 .tab-btn.active{color:var(--ink);border-bottom-color:var(--ink)}
+
+/* ── LUPA EN LISTÓN ── */
+.stat-search-btn{
+  display:none; /* solo visible en móvil */
+  background:none;border:none;cursor:pointer;
+  color:var(--paper);padding:.2rem .6rem;
+  flex-shrink:0;opacity:.8;transition:opacity .15s;
+  border-right:1px solid rgba(255,255,255,.2);
+}
+.stat-search-btn:hover{opacity:1}
+
+@media(max-width:600px){
+  .stat-search-btn{display:flex;align-items:center}
+  /* Toolbar oculto por defecto en móvil — se muestra con .toolbar-open */
+  .toolbar{display:none}
+  .toolbar.toolbar-open{display:flex}
+}

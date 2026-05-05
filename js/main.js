@@ -406,6 +406,26 @@ document.addEventListener('DOMContentLoaded',()=>{
     dropZone.addEventListener('dragleave',()=>dropZone.classList.remove('drag-over'));
     dropZone.addEventListener('drop',e=>{e.preventDefault();dropZone.classList.remove('drag-over');if(e.dataTransfer.files[0])loadFile(e.dataTransfer.files[0])});
   }
+  // Sticky wrapper — no JS needed for positioning
+
+  // LUPA — toggle toolbar en móvil
+  const statSearchBtn=document.getElementById('stat-search-btn');
+  if(statSearchBtn){
+    statSearchBtn.addEventListener('click',()=>{
+      const toolbar=document.getElementById('toolbar');
+      const open=toolbar.classList.toggle('toolbar-open');
+      if(open)setTimeout(()=>document.getElementById('search-input').focus(),50);
+    });
+  }
+  // Cerrar toolbar móvil al limpiar
+  const btnClear=document.getElementById('btn-clear');
+  if(btnClear){
+    const origClear=btnClear.onclick;
+    btnClear.addEventListener('click',()=>{
+      if(window.innerWidth<=600)document.getElementById('toolbar').classList.remove('toolbar-open');
+    });
+  }
+
   // PANEL
   document.getElementById('panel-close').addEventListener('click',closePanel);
   document.getElementById('panel-overlay').addEventListener('click',closePanel);
