@@ -144,7 +144,16 @@
 a.psg-chip:hover{opacity:.8;}
 .psg-stage{
   position:relative;
-  overflow:hidden;
+  overflow:visible;
+}
+/* Stack: todos los textos apilados, el stage toma la altura del más alto */
+.psg-stack{
+  display:grid;
+  grid-template-rows:1fr;
+}
+.psg-text-layer{
+  grid-row:1;
+  grid-column:1;
 }
 .psg-text{
   font-size:.82rem;line-height:1.4;color:var(--ink);
@@ -246,24 +255,59 @@ a.psg-chip:hover{opacity:.8;}
 ::-webkit-scrollbar-thumb{background:var(--mid)}
 
 .hidden{display:none!important}
-/* ── RESPONSIVE MÓVIL (≤600px) ── */
+/* ══════════════════════════════════════════
+   RESPONSIVE — MÓVIL (≤600px)
+   ══════════════════════════════════════════ */
 @media(max-width:600px){
-  .panel-3col{grid-template-columns:1fr;overflow-y:auto}
-  .panel-side{display:none}
-  .panel-center{border:none;overflow-y:visible}
+
+  /* Panel ocupa toda la pantalla en columna única */
+  .panel-3col{grid-template-columns:1fr;overflow-y:auto;overflow-x:hidden}
+
+  /* Ocultar columnas laterales — los titulares van en panel-mobile-headlines */
+  .panel-side{display:none!important}
+
+  .panel-center{border:none;overflow-y:visible;overflow-x:hidden;width:100%}
   .panel-img-wrap{max-height:40vw}
-  .panel-center-body{padding:1rem .9rem 1.5rem}
+  .panel-center-body{padding:1rem .9rem 1.5rem;width:100%;box-sizing:border-box}
   .panel-title{font-size:clamp(1rem,5vw,1.4rem)}
   .panel-close{padding:.4rem 1rem;font-size:.85rem;min-height:36px}
   .panel-flag-bar{padding:.4rem .9rem}
   .panel-flag-title{font-size:1.1rem}
   .panel-flag-bar .panel-kicker{display:none}
-  .panel-mobile-headlines{margin-top:1rem;border-top:1px solid var(--rule)}
-  .psg-stage{min-height:0!important;transition:none}
+
+  /* Contenedor de titulares en móvil */
+  .panel-mobile-headlines{margin-top:1rem;border-top:1px solid var(--rule);width:100%;overflow-x:hidden}
+
+  /* Carrusel: permitir wrap del texto, no cortar */
+  .psg-stage{min-height:0!important;transition:none;overflow:visible;white-space:normal}
+  .psg-text{white-space:normal;word-break:break-word}
   .psg-carousel{margin-bottom:.25rem}
+  .ph-source-group{max-width:100%;box-sizing:border-box}
+
+  /* Ticker de regiones */
+  .panel-regiones{
+    flex-wrap:nowrap;
+    overflow:hidden;
+    justify-content:flex-start;
+    mask-image:linear-gradient(to right,transparent 0%,black 6%,black 94%,transparent 100%);
+    -webkit-mask-image:linear-gradient(to right,transparent 0%,black 6%,black 94%,transparent 100%);
+  }
+  .panel-regiones-inner{
+    display:flex;
+    gap:.4rem;
+    white-space:nowrap;
+    animation:chipsTicker 12s linear infinite;
+  }
+  @keyframes chipsTicker{
+    0%  {transform:translateX(0)}
+    100%{transform:translateX(-50%)}
+  }
+  .panel-region-chip{flex-shrink:0}
 }
 
-/* ── RESPONSIVE TABLET (601–900px) ── */
+/* ══════════════════════════════════════════
+   RESPONSIVE — TABLET (601–900px)
+   ══════════════════════════════════════════ */
 @media(min-width:601px) and (max-width:900px){
   .panel-3col{grid-template-columns:1fr 260px 1fr}
 }

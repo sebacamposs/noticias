@@ -149,10 +149,7 @@ const renderHeadlines=items=>{
 
 const renderGrupo=(g,gi)=>{
     const uid='psg'+(++_uidCounter);
-    const t0=g.tits[0];
     const mkLink=(t)=>t.link?`<a href="${esc(t.link)}" target="_blank" rel="noopener">${esc(t.texto)}</a>`:esc(t.texto);
-    // Pre-render all texts as hidden spans to measure max height
-    const hiddenItems=g.tits.map(t=>`<span class="psg-text" style="visibility:hidden;position:absolute">${mkLink(t)}</span>`).join('');
     const nav=g.tits.length<2?'':
       `<div class="psg-nav">
         <button class="psg-btn" data-uid="${uid}" data-dir="-1">&#8249;</button>
@@ -162,11 +159,17 @@ const renderGrupo=(g,gi)=>{
     const headerHtml=g._fusionado
       ? `<div class="psg-header psg-header-multi"><div class="psg-chips">${g.fuentes.map(f=>f.link?`<a class="psg-chip" href="${esc(f.link)}" target="_blank" rel="noopener">${esc(f.fuente)}</a>`:`<span class="psg-chip">${esc(f.fuente)}</span>`).join('')}</div><span class="psg-count">${g.fuentes.length} fuentes</span></div>`
       : `<div class="psg-header"><span class="psg-name">${esc(g.fuente)}</span>${g.tits.length>1?`<span class="psg-count">${g.tits.length} titulares</span>`:''}</div>`;
+    // Render all texts stacked: visible div + invisible siblings that reserve height
+    // The stage wraps all of them so its natural height = tallest item
+    const allTexts=g.tits.map((t,i)=>
+      i===0
+        ? `<div class="psg-text psg-text-layer psg-text-active" id="text-${uid}">${mkLink(t)}</div>`
+        : `<div class="psg-text psg-text-layer" aria-hidden="true" style="visibility:hidden;pointer-events:none">${mkLink(t)}</div>`
+    ).join('');
     return`<div class="ph-source-group${g._fusionado?' psg-multi':''}" data-uid="${uid}" data-fuente="${esc(g.fuente)}">
       ${headerHtml}
       <div class="psg-stage" id="stage-${uid}">
-        ${hiddenItems}
-        <div class="psg-text" id="text-${uid}">${mkLink(t0)}</div>
+        <div class="psg-stack">${allTexts}</div>
       </div>
       ${nav}
     </div>`;
@@ -175,18 +178,7 @@ const renderGrupo=(g,gi)=>{
 const _mkLink=(t)=>t.link?`<a href="${esc(t.link)}" target="_blank" rel="noopener">${esc(t.texto)}</a>`:esc(t.texto);
 
 function lockStageHeights(){
-  document.querySelectorAll('.psg-stage').forEach(stage=>{
-    // Measure all hidden ghost spans to find tallest
-    const ghosts=stage.querySelectorAll('span.psg-text');
-    let maxH=0;
-    ghosts.forEach(g=>{maxH=Math.max(maxH,g.offsetHeight)});
-    // Also measure the visible text
-    const vis=stage.querySelector('div.psg-text');
-    if(vis)maxH=Math.max(maxH,vis.offsetHeight);
-    if(maxH>0)stage.style.minHeight=maxH+'px';
-    // Remove ghost spans after measuring
-    ghosts.forEach(g=>g.remove());
-  });
+  // No-op: stage height is now determined by the stacked invisible siblings in .psg-stack
 }
 
 
@@ -229,18 +221,28 @@ function goCar(uid,idx,g,dir,container){
 
 function _updateCarouselUI(uid,idx,g,con,dir,prevIdx){
   const scope=con||document;
-  const el=scope.querySelector('#text-'+uid);
-  if(el){
+  const stage=scope.querySelector('#stage-'+uid);
+  if(stage){
+    const layers=stage.querySelectorAll('.psg-text-layer');
     const slideDir=dir!==undefined?dir:(prevIdx!==undefined?(idx>prevIdx?1:-1):1);
     const outClass=slideDir>0?'slide-out-left':'slide-out-right';
     const inClass=slideDir>0?'slide-in-left':'slide-in-right';
-    el.classList.add(outClass);
-    setTimeout(()=>{
-      el.classList.remove(outClass);
-      el.innerHTML=_mkLink(g.tits[idx]);
-      el.classList.add(inClass);
-      setTimeout(()=>el.classList.remove(inClass),240);
-    },220);
+    // Animate out current active
+    const cur=stage.querySelector('.psg-text-active');
+    if(cur){
+      cur.classList.add(outClass);
+      setTimeout(()=>{
+        cur.classList.remove(outClass,'psg-text-active');
+        cur.style.visibility='hidden';cur.style.pointerEvents='none';
+        // Animate in new
+        const next=layers[idx];
+        if(next){
+          next.style.visibility='visible';next.style.pointerEvents='';
+          next.classList.add('psg-text-active',inClass);
+          setTimeout(()=>next.classList.remove(inClass),240);
+        }
+      },220);
+    }
   }
   scope.querySelectorAll(`.psg-dot[data-uid="${uid}"]`).forEach((d,i)=>d.classList.toggle('active',i===idx));
 }
@@ -337,7 +339,18 @@ function openPanel(ev,cardEl){
 
   document.getElementById('panel-title').textContent=ev.evento||'Sin título';
   document.getElementById('panel-stats-center').textContent=`${ev.n_titulares||0} titulares en ${(ev.fuentes||[]).length} medios`;
-  document.getElementById('panel-regiones').innerHTML=(ev.regiones||[]).map(r=>`<span class="panel-region-chip">${esc(r)}</span>`).join('');
+  const regiones=ev.regiones||[];
+  const chipsHtml=regiones.map(r=>`<span class="panel-region-chip">${esc(r)}</span>`).join('');
+  const regiEl=document.getElementById('panel-regiones');
+  if(window.innerWidth<=600&&regiones.length>1){
+    // Ticker: duplicar chips para loop continuo sin salto
+    regiEl.innerHTML=`<div class="panel-regiones-inner">${chipsHtml}${chipsHtml}</div>`;
+    // Ajustar duración según cantidad de chips
+    const dur=Math.max(6,regiones.length*1.8);
+    regiEl.querySelector('.panel-regiones-inner').style.animationDuration=dur+'s';
+  } else {
+    regiEl.innerHTML=chipsHtml;
+  }
 
   const tits=ev.titulares||[];
   const todosGrupos=agruparPorFuente(tits);
@@ -348,11 +361,13 @@ function openPanel(ev,cardEl){
 
   if(isMobile){
     // En móvil: todos los titulares en columna central, columnas laterales ocultas por CSS
-    mobileEl.innerHTML=`<div class="panel-side-label">${todosGrupos.length} fuente${todosGrupos.length!==1?'s':''}</div>`+renderGrupos(todosGrupos);
+    // Usamos un div interno para initCarousels (evita que cloneNode rompa el contenedor padre)
+    mobileEl.innerHTML=`<div class="panel-side-label">${todosGrupos.length} fuente${todosGrupos.length!==1?'s':''}</div><div id="mobile-carousel-wrap">${renderGrupos(todosGrupos)}</div>`;
     mobileEl.classList.remove('hidden');
     leftEl.innerHTML='';rightEl.innerHTML='';rightEl.style.display='none';
     document.getElementById('panel-center').scrollTop=0;
-    initCarousels(mobileEl,todosGrupos);
+    const wrapEl=document.getElementById('mobile-carousel-wrap');
+    initCarousels(wrapEl,todosGrupos);
   } else {
     mobileEl.classList.add('hidden');mobileEl.innerHTML='';
     const mid=Math.ceil(todosGrupos.length/2);

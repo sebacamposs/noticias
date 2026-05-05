@@ -131,6 +131,7 @@ function initRegional(){
     if(path)path.classList.add('has-news');
   });
 
+
   // ── MAP TOOLTIP ──
   const tooltip=document.getElementById('map-tooltip');
   const ttName=document.getElementById('tt-name');
@@ -175,6 +176,11 @@ function selectRegion(region){
     p.classList.toggle('active',p.getAttribute('data-region')===region);
   });
   document.querySelectorAll('.rmp-region-btn').forEach(b=>b.classList.toggle('active',b.dataset.region===region));
+
+  // En móvil abrir modal con las noticias
+  if(window.innerWidth<=680){
+    openRegionalModal(region);
+  }
 
   // ── Build event list with priority ──
   // Each event gets classified as: 'regional' (has titulares ONLY from this region)
@@ -246,6 +252,7 @@ function selectRegion(region){
   }
   document.getElementById('reg-news-list').innerHTML=newsHtml||'<div class="empty-state" style="padding:3rem 1rem"><p>Sin noticias</p></div>';
 
+  _regionalEvents=allEvents;
   document.getElementById('reg-news-list').querySelectorAll('.reg-story').forEach(el=>{
     el.addEventListener('click',()=>{
       const idx=+el.dataset.idx;
@@ -265,6 +272,43 @@ function buildRegStory(ev,idx,type){
     <div class="reg-story-meta">${esc(fuentesStr)} · ${ev._regCount} titular${ev._regCount!==1?'es':''}</div>
   </div>`;
 }
+
+
+// Guarda los eventos del regional activo para usarlos en el modal
+let _regionalEvents=[];
+
+function openRegionalModal(region){
+  const overlay=document.getElementById('reg-modal-overlay');
+  const title=document.getElementById('reg-modal-title');
+  const body=document.getElementById('reg-modal-body');
+  if(!overlay)return;
+  title.textContent=region;
+  // Copiar el HTML generado de reg-news-list
+  const newsList=document.getElementById('reg-news-list');
+  body.innerHTML=newsList?newsList.innerHTML:'';
+  // Re-bind clicks usando _regionalEvents
+  body.querySelectorAll('.reg-story').forEach(el=>{
+    el.addEventListener('click',()=>{
+      const idx=+el.dataset.idx;
+      const ev=_regionalEvents[idx];
+      if(ev){openPanel({...ev,titulares:ev._reg||ev.titulares},el);}
+      closeRegionalModal();
+    });
+  });
+  overlay.classList.remove('hidden');
+}
+
+function closeRegionalModal(){
+  const overlay=document.getElementById('reg-modal-overlay');
+  if(overlay)overlay.classList.add('hidden');
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  const closeBtn=document.getElementById('reg-modal-close');
+  const overlay=document.getElementById('reg-modal-overlay');
+  if(closeBtn)closeBtn.addEventListener('click',closeRegionalModal);
+  if(overlay)overlay.addEventListener('click',e=>{if(e.target===overlay)closeRegionalModal()});
+});
 
 // Hook for map SVG
 window.selectRegionFromMap=selectRegion;
