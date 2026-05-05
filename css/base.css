@@ -10,7 +10,8 @@
   --max-w:   1320px;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{background:var(--paper)}
+html{background:var(--paper);overflow-x:hidden;width:100%}
+body{overflow-x:hidden;width:100%;position:relative}
 body{
   font-family:'Source Serif 4',Georgia,serif;
   background:var(--paper);color:var(--ink);
