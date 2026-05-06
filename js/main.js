@@ -130,8 +130,39 @@ const agruparPorFuente=items=>{
     }
   }
   fusionados.forEach(g=>{ g._fusionado=g.fuentes.length>1; });
+
+  // Fusionar grupos multi-titular si todos sus titulares son comunes entre sí
+  const multiNoFusionados=[];
+  const multiUsados=new Set();
+  for(let i=0;i<multi.length;i++){
+    if(multiUsados.has(i))continue;
+    const gi=multi[i];
+    const keysI=new Set(gi.tits.map(t=>t.texto.toLowerCase()));
+    const fusionGroup={
+      fuente:gi.fuente,
+      tits:gi.tits,
+      fuentes:[{fuente:gi.fuente,link:gi.tits[0]?.link||'',region:gi.tits[0]?.region||''}],
+      _fusionado:false,
+    };
+    for(let j=i+1;j<multi.length;j++){
+      if(multiUsados.has(j))continue;
+      const gj=multi[j];
+      const keysJ=new Set(gj.tits.map(t=>t.texto.toLowerCase()));
+      // Fusionar si ≥80% de titulares son comunes entre ambas fuentes
+      const comunes=[...keysI].filter(k=>keysJ.has(k));
+      const umbral=Math.min(keysI.size,keysJ.size)*0.8;
+      if(comunes.length>=umbral && comunes.length>=1){
+        fusionGroup.fuentes.push({fuente:gj.fuente,link:gj.tits[0]?.link||'',region:gj.tits[0]?.region||''});
+        multiUsados.add(j);
+      }
+    }
+    fusionGroup._fusionado=fusionGroup.fuentes.length>1;
+    multiNoFusionados.push(fusionGroup);
+    multiUsados.add(i);
+  }
+
   return [
-    ...multi,
+    ...multiNoFusionados.sort((a,b)=>b.tits.length-a.tits.length),
     ...fusionados.sort((a,b)=>b.fuentes.length-a.fuentes.length),
   ];
 };
@@ -295,13 +326,19 @@ function openSourceModal(fuente,g){
   if(!g)return;
   // Para grupos fusionados, mostrar todas las fuentes con sus links
   if(g._fusionado&&g.fuentes&&g.fuentes.length>1){
-    document.getElementById('smo-title').textContent='Titular compartido';
-    document.getElementById('smo-sub').textContent=`${g.fuentes.length} medios publicaron este mismo titular`;
-    document.getElementById('smo-body').innerHTML=g.fuentes.map(f=>`
+    const esSoloUnTitular=g.tits.length===1;
+    document.getElementById('smo-title').textContent=esSoloUnTitular?'Titular compartido':'Titulares compartidos';
+    document.getElementById('smo-sub').textContent=`${g.fuentes.length} medios publicaron ${esSoloUnTitular?'este mismo titular':'los mismos titulares'}`;
+    // Mostrar cada titular una vez, con chips de fuentes debajo
+    const fuentesHtml=g.fuentes.map(f=>
+      f.link
+        ? `<a class="psg-chip" href="${esc(f.link)}" target="_blank" rel="noopener">${esc(f.fuente)}</a>`
+        : `<span class="psg-chip">${esc(f.fuente)}</span>`
+    ).join('');
+    document.getElementById('smo-body').innerHTML=g.tits.map(t=>`
       <div class="source-modal-item">
-        <div class="smi-text" style="font-weight:600;font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;color:var(--accent)">${esc(f.fuente)}</div>
-        <div class="smi-text">${f.link?`<a href="${esc(f.link)}" target="_blank" rel="noopener">${esc(g.tits[0].texto)}</a>`:esc(g.tits[0].texto)}</div>
-        ${f.region?`<div class="smi-region">${esc(f.region)}</div>`:''}
+        <div class="smi-text">${t.link?`<a href="${esc(t.link)}" target="_blank" rel="noopener">${esc(t.texto)}</a>`:esc(t.texto)}</div>
+        <div class="psg-chips" style="margin-top:.4rem;flex-wrap:wrap">${fuentesHtml}</div>
       </div>`).join('');
   } else {
     document.getElementById('smo-title').textContent=fuente;
