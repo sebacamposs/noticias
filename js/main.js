@@ -50,7 +50,14 @@ function renderEventos(){
   const search=document.getElementById('search-input').value.toLowerCase();
   const catF=document.getElementById('filter-cat').value;
   const regF=document.getElementById('filter-region').value;
-  filteredCache=[...DATA.eventos].sort((a,b)=>(b.n_titulares||0)-(a.n_titulares||0)).filter(ev=>{
+  // Ordenar por relevancia: titulares únicos × medios distintos
+  // Titulares duplicados entre fuentes cuentan solo una vez
+  const _scorev=ev=>{
+    const textos=new Set((ev.titulares||[]).map(t=>(t.titular||'').toLowerCase().trim()).filter(Boolean));
+    const fuentes=new Set((ev.titulares||[]).map(t=>t.fuente).filter(Boolean));
+    return textos.size*(Math.log(fuentes.size+1)+1);
+  };
+  filteredCache=[...DATA.eventos].sort((a,b)=>_scorev(b)-_scorev(a)).filter(ev=>{
     if(catF&&ev.categoria!==catF)return false;
     if(regF&&!(ev.regiones||[]).includes(regF))return false;
     if(search){const h=(ev.evento||'').toLowerCase().includes(search)||(ev.titulares||[]).some(t=>(t.titular||'').toLowerCase().includes(search));if(!h)return false}
@@ -104,7 +111,7 @@ const agruparPorFuente=items=>{
     const texto=normTitular(t.titular||'').trim();
     if(!texto)continue;
     if(!map[f])map[f]=[];
-    map[f].push({texto,link:t.link||'',region:t.region||''});
+    map[f].push({texto,link:t.link||'',region:t.region||'',conglomerado:t.conglomerado||''});
   }
   const grupos=Object.entries(map)
     .map(([fuente,tits])=>({fuente,tits}))
