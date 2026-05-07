@@ -328,8 +328,13 @@ function openSourceModal(fuente,g){
   if(g._fusionado&&g.fuentes&&g.fuentes.length>1){
     const esSoloUnTitular=g.tits.length===1;
     document.getElementById('smo-title').textContent=esSoloUnTitular?'Titular compartido':'Titulares compartidos';
-    document.getElementById('smo-sub').textContent=`${g.fuentes.length} medios publicaron ${esSoloUnTitular?'este mismo titular':'los mismos titulares'}`;
-    // Mostrar cada titular una vez, con chips de fuentes debajo
+    // Detectar si todas las fuentes son del mismo conglomerado
+    const conglomerados=[...new Set(g.tits.map(t=>t.conglomerado).filter(Boolean))];
+    const mismoConglomerado=conglomerados.length===1&&conglomerados[0]!=='Independiente';
+    const subTexto=`${g.fuentes.length} medios publicaron ${esSoloUnTitular?'este mismo titular':'los mismos titulares'}`
+      +(mismoConglomerado?` · Pertenecen al mismo grupo: ${conglomerados[0]}`:'');
+    document.getElementById('smo-sub').textContent=subTexto;
+    // Chips de fuentes
     const fuentesHtml=g.fuentes.map(f=>
       f.link
         ? `<a class="psg-chip" href="${esc(f.link)}" target="_blank" rel="noopener">${esc(f.fuente)}</a>`

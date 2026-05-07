@@ -424,6 +424,21 @@ CONGLOMERADOS = {
     "Pulso":                          "COPESA",
     "La Cuarta":                      "COPESA",
     "Radio Agricultura":              "COPESA",
+    # ── Medios Mi Voz ──
+    "El Morrocotudo":                 "Medios Mi Voz",
+    "El Boyaldía":                    "Medios Mi Voz",
+    "El Nortero":                     "Medios Mi Voz",
+    "El Quehaydecierto":              "Medios Mi Voz",
+    "El Observatodo":                 "Medios Mi Voz", 
+    "El Martutino":                   "Medios Mi Voz",
+    "El Rancahuaso":                  "Medios Mi Voz",
+    "El Amaule":                      "Medios Mi Voz",
+    "El Concecuente":                 "Medios Mi Voz",
+    "La Opiñón":                      "Medios Mi Voz",
+    "El Naveghable":                  "Medios Mi Voz",
+    "El Repuertero":                  "Medios Mi Voz",
+    "El Vacanudo":                    "Medios Mi Voz",
+    "El Magallanews":                 "Medios Mi Voz",
     # ── Grupo Luksic (Canal 13 / Tele13) ──
     # "Tele13":                         "Grupo Luksic",
     # "CNN Chile":                      "Grupo Luksic",
@@ -1699,11 +1714,12 @@ def fase_excel(hechos_finales: list, titulares_crudos: list,
             fuente_raw  = crudo.get('source', '') or (item.get('fuente','') if isinstance(item,dict) else '')
             fuente_norm = normalizar_fuente(fuente_raw) or fuente_raw
             titulares_evento.append({
-                "fuente":  fuente_norm,
-                "region":  crudo.get('region', '') or (item.get('region','') if isinstance(item,dict) else ''),
-                "titular": crudo.get('title',  '') or (item.get('texto', '') if isinstance(item,dict) else ''),
-                "fecha":   crudo.get('fecha',  '') or (item.get('fecha', '') if isinstance(item,dict) else ''),
-                "link":    crudo.get('link',   '') or (item.get('link',  '') if isinstance(item,dict) else ''),
+                "fuente":        fuente_norm,
+                "region":        crudo.get('region', '') or (item.get('region','') if isinstance(item,dict) else ''),
+                "titular":       crudo.get('title',  '') or (item.get('texto', '') if isinstance(item,dict) else ''),
+                "fecha":         crudo.get('fecha',  '') or (item.get('fecha', '') if isinstance(item,dict) else ''),
+                "link":          crudo.get('link',   '') or (item.get('link',  '') if isinstance(item,dict) else ''),
+                "conglomerado":  get_conglomerado(fuente_norm),
             })
         fuentes_set  = {t["fuente"]  for t in titulares_evento if t["fuente"]}
         regiones_set = {t["region"]  for t in titulares_evento if t["region"]}
