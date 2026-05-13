@@ -1,5 +1,4 @@
 import feedparser
-import pandas as pd
 import time
 import urllib.parse
 import json
@@ -679,19 +678,6 @@ def _norm_text(s: str) -> str:
     s = re.sub(r"\s+", " ", s).strip()
     return s
 
-def crear_nombre_hoja_valido(numero, evento, nombres_usados: set) -> str:
-    evento_limpio = re.sub(r'[\\/*?:\[\]]', '', evento)
-    prefijo = f"{numero}_"
-    nombre = f"{prefijo}{evento_limpio[:31 - len(prefijo)]}"
-    nombre_final = nombre
-    contador = 2
-    while nombre_final.lower() in nombres_usados:
-        sufijo = f"_{contador}"
-        nombre_final = f"{nombre[:31 - len(sufijo)]}{sufijo}"
-        contador += 1
-    nombres_usados.add(nombre_final.lower())
-    return nombre_final
-
 def validar_categoria(categoria):
     if categoria in CATEGORIAS:
         return categoria
@@ -703,22 +689,6 @@ def validar_categoria(categoria):
         log(f"⚠️ Categoría inválida recibida de la IA: '{categoria}' → asignando 'Sin categoría'")
     return "Sin categoría"
 
-def _ajustar_excel(writer, sheet_name):
-    ws = writer.sheets[sheet_name]
-    ws.freeze_panes = "A2"
-    ws.auto_filter.ref = ws.dimensions
-    for col in ws.columns:
-        max_len = 0
-        col_letter = col[0].column_letter
-        for cell in col[:2000]:
-            v = "" if cell.value is None else str(cell.value)
-            if len(v) > max_len:
-                max_len = len(v)
-        ws.column_dimensions[col_letter].width = min(60, max(10, max_len + 2))
-
-# ─────────────────────────────────────────────
-# UTILIDADES JSON
-# ─────────────────────────────────────────────
 def _extract_json_block(texto: str) -> str:
     if not texto:
         return ""
@@ -1354,43 +1324,6 @@ def fase_consolidacion(hechos_por_bloques: list, chunk_size: int = 80) -> list:
     return resultado_final
 
 # ─────────────────────────────────────────────
-# FASE 3: CONSTRUCCIÓN DEL EXCEL
-# ─────────────────────────────────────────────
-def construir_filas_evento(hecho: dict, titulares_por_indice: dict) -> list:
-    nombre_evento = hecho.get('evento', '')
-    filas = []
-    for item in hecho.get('titulares', []):
-        if isinstance(item, int):
-            indice = item
-            crudo = titulares_por_indice.get(indice, {})
-            fuente_raw = crudo.get('source', '')
-            region     = crudo.get('region', '')
-            texto      = crudo.get('title', f"[índice {indice} no encontrado]")
-            fecha      = crudo.get('fecha', '')
-            link       = crudo.get('link', '')
-        else:
-            indice     = item.get('indice', None)
-            crudo      = titulares_por_indice.get(indice, {}) if indice else {}
-            fuente_raw = crudo.get('source', '') or item.get('fuente', '')
-            region     = crudo.get('region', '') or item.get('region', '')
-            texto      = crudo.get('title', '') or item.get('texto', '')
-            fecha      = crudo.get('fecha', '') or item.get('fecha', '')
-            link       = crudo.get('link', '') or item.get('link', '')
-
-        fuente_norm = normalizar_fuente(fuente_raw) if fuente_raw else None
-
-        filas.append({
-            "Evento":    nombre_evento,
-            "Fuente":    fuente_norm if fuente_norm else fuente_raw,
-            "FuenteRaw": fuente_raw,
-            "Región":    region,
-            "Titular":   texto,
-            "Fecha":     fecha,
-            "Link":      link,
-        })
-    return filas
-
-# ─────────────────────────────────────────────
 # FASE DE IMÁGENES
 # ─────────────────────────────────────────────
 import urllib.request
@@ -1624,81 +1557,9 @@ def fase_imagenes(hechos_finales, titulares_por_indice):
 
 
 
-def fase_excel(hechos_finales: list, titulares_crudos: list,
+def fase_exportar(hechos_finales: list, titulares_crudos: list,
                titulares_por_indice: dict, timestamp: str):
-    filename = f"Monitoreo_Chile_{timestamp}.xlsx"
-    log(f"📊 Generando Excel con {len(hechos_finales)} eventos...")
 
-    titulos_clasificados_set = {
-        (titulares_por_indice.get(item, {}).get('title', '') if isinstance(item, int)
-         else item.get('texto', ''))
-        for hecho in hechos_finales
-        for item in hecho.get('titulares', [])
-    }
-    norm_clasificados, bigrams_clasificados = _construir_indice_clasificados(titulos_clasificados_set)
-
-    sin_clasificar = [
-        t for t in titulares_crudos
-        if not _titulo_fue_clasificado(t['title'], norm_clasificados, bigrams_clasificados)
-    ]
-    log(f"📋 Sin clasificar: {len(sin_clasificar)} de {len(titulares_crudos)}")
-
-    nombres_hojas_usados = set()
-
-    with pd.ExcelWriter(filename, engine="openpyxl") as writer:
-
-        resumen_filas = []
-        for hecho in hechos_finales:
-            fuentes_cubiertas  = set()
-            regiones_cubiertas = set()
-            for item in hecho.get('titulares', []):
-                indice = item if isinstance(item, int) else item.get('indice')
-                crudo  = titulares_por_indice.get(indice, {})
-                fn     = normalizar_fuente(crudo.get('source', ''))
-                if fn and fn in FUENTES_VALIDAS:
-                    fuentes_cubiertas.add(fn)
-                    regiones_cubiertas.add(crudo.get('region', ''))
-            resumen_filas.append({
-                "Categoría":    validar_categoria(hecho.get('categoria', '')),
-                "Evento":       hecho.get('evento', ''),
-                "N° Titulares": len(hecho.get('titulares', [])),
-                "N° Fuentes":   len(fuentes_cubiertas),
-                "Regiones":     ", ".join(sorted(regiones_cubiertas)),
-                "Fuentes":      ", ".join(sorted(fuentes_cubiertas)),
-            })
-
-        nombres_hojas_usados.add("resumen")
-        pd.DataFrame(resumen_filas).to_excel(writer, sheet_name="Resumen", index=False)
-        _ajustar_excel(writer, "Resumen")
-
-        for i, hecho in enumerate(hechos_finales, 1):
-            filas = construir_filas_evento(hecho, titulares_por_indice)
-            if not filas:
-                continue
-            df = pd.DataFrame(filas)
-            nombre_hoja = crear_nombre_hoja_valido(
-                i, hecho.get('evento', 'Evento'), nombres_hojas_usados
-            )
-            try:
-                df.to_excel(writer, sheet_name=nombre_hoja, index=False)
-                _ajustar_excel(writer, nombre_hoja)
-            except Exception as e:
-                log(f"⚠️ Error creando hoja '{nombre_hoja}': {e}")
-
-        if sin_clasificar:
-            nombres_hojas_usados.add("sin clasificar")
-            df_sc = pd.DataFrame([{
-                "Fuente":      t.get('source', ''),
-                "Región":      t.get('region', ''),
-                "Titular":     t.get('title', ''),
-                "Fecha (UTC)": t.get('fecha', ''),
-                "Link":        t.get('link', ''),
-            } for t in sin_clasificar])
-            df_sc.to_excel(writer, sheet_name="Sin clasificar", index=False)
-            _ajustar_excel(writer, "Sin clasificar")
-            log(f"   📄 'Sin clasificar': {len(sin_clasificar)} titulares")
-
-    log(f"✅ Excel guardado: '{filename}'")
 
     # ── Exportar JSON para la UI ──
     json_data = {
@@ -1742,7 +1603,6 @@ def fase_excel(hechos_finales: list, titulares_crudos: list,
         json.dump({"file": json_filename}, f)
     log(f"📌 latest.json actualizado → {json_filename}")
 
-    return filename
 
 # ─────────────────────────────────────────────
 # FASE 2B: PROCESAMIENTO IA POR BLOQUES
@@ -1892,7 +1752,7 @@ def main():
 
     fase_imagenes(hechos_finales, titulares_por_indice)
 
-    fase_excel(hechos_finales, titulares_crudos, titulares_por_indice, timestamp)
+    fase_exportar(hechos_finales, titulares_crudos, titulares_por_indice, timestamp)
 
     log(f"📈 Eventos únicos: {len(hechos_finales)}")
     log(f"📊 Requests utilizados: {REQUESTS_REALIZADOS}/{RPD_LIMIT}")
